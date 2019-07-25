@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "117370828687",
+    "firebase_url": "https://vietis-android-mapproject.firebaseio.com",
+    "project_id": "vietis-android-mapproject",
+    "storage_bucket": "vietis-android-mapproject.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:117370828687:android:ac3bc1029591b548",
+        "android_client_info": {
+          "package_name": "com.example.sharelocation"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "117370828687-7ojv2ukptes50gl5t29rui059g0tmqgl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.sharelocation",
+            "certificate_hash": "84b4e115250904992995bd0b06cce37745211630"
+          }
+        },
+        {
+          "client_id": "117370828687-r9q8ijbpc6n9lvjcjo16iafajaabf0u7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAeoo7CVAVrqHrT_904Q8eItOXqmwQiyCI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "117370828687-r9q8ijbpc6n9lvjcjo16iafajaabf0u7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
