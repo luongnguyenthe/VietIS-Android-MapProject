@@ -1,6 +1,6 @@
 package com.example.sharelocation.screens;
 
-//import android.location.LocationListener;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
@@ -8,9 +8,7 @@ import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -29,14 +27,10 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.common.ConnectionResult;//lay thu vien nay sua
 import com.google.android.gms.location.LocationListener;//thay doi thu vien tren
-import com.google.android.gms.common.api.GoogleApi;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import android.os.Bundle;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
 public class MapActivity extends BaseActivity implements
@@ -55,7 +49,7 @@ public class MapActivity extends BaseActivity implements
     private LocationRequest mLocationRequest;
     private Location mlastLocation;
     private Marker mcurrentUserLocationMarker;
-    private static final int Request_User_Location = 111;
+    private static final int REQUEST_CODE_LOCATION = 111;
 
     View mapView;
 
@@ -88,7 +82,12 @@ public class MapActivity extends BaseActivity implements
             buildGoogleApiClient();
             mGoogleMap.setMyLocationEnabled(true);
         }
-        //di chuyen button vitri xuong duoi
+
+        moveButtonLocation();
+
+    }
+
+    public  void moveButtonLocation(){  //di chuyen button vitri xuong duoi
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().
                 findFragmentById(R.id.fragment_map);
         View mapView = mapFragment.getView();
@@ -146,11 +145,17 @@ public class MapActivity extends BaseActivity implements
     private void initGoogleMap() {
         SupportMapFragment supportMapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.fragment_map);
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
-            checkUserLocationPermission();
-        }
+
+        checkVersion();
+
         if (supportMapFragment != null) {
             supportMapFragment.getMapAsync(this);
+        }
+    }
+
+    public void checkVersion(){//check version api
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+            checkUserLocationPermission();
         }
     }
 
@@ -159,10 +164,10 @@ public class MapActivity extends BaseActivity implements
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
             if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)){
                 ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, Request_User_Location);
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_LOCATION);
             }else {
                 ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, Request_User_Location);
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_LOCATION);
             }
 
             return false;
@@ -174,7 +179,7 @@ public class MapActivity extends BaseActivity implements
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode){
-            case Request_User_Location:
+            case REQUEST_CODE_LOCATION:
                 if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
                     if(ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION ) == PackageManager.PERMISSION_GRANTED){
                         if(mgoogleApiClient == null){
