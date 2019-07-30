@@ -46,7 +46,7 @@ public class PlaceSearchRVA extends RecyclerView.Adapter<PlaceSearchRVA.ViewHold
 
     class ViewHolder extends RecyclerView.ViewHolder {
 
-        public ViewHolder(@NonNull View itemView) {
+        ViewHolder(@NonNull View itemView) {
             super(itemView);
 
             itemView.setOnClickListener(new View.OnClickListener() {
@@ -57,7 +57,7 @@ public class PlaceSearchRVA extends RecyclerView.Adapter<PlaceSearchRVA.ViewHold
             });
         }
 
-        public void bindData() {
+        void bindData() {
 
         }
     }

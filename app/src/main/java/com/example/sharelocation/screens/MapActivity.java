@@ -87,7 +87,7 @@ public class MapActivity extends BaseActivity implements
     public void onMapReady(GoogleMap googleMap) {
         mGoogleMap = googleMap;
 
-        if(ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             //TODO: Consider Calling
             buildGoogleApiClient();
             mGoogleMap.setMyLocationEnabled(true);
@@ -97,20 +97,20 @@ public class MapActivity extends BaseActivity implements
 
     }
 
-    public  void moveButtonLocation(){  //di chuyen button vitri xuong duoi
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().
-                findFragmentById(R.id.fragment_map);
-        View mapView = mapFragment.getView();
-        if (mapView != null && mapView.findViewById(1) != null) {
-            // Get the button view
-            View locationButton = ((View) mapView.findViewById(1).getParent()).findViewById(2);
-            // and next place it, on bottom right (as Google Maps app)
-            RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams)
-                    locationButton.getLayoutParams();
-            // position on right bottom
-            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
-            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
-            layoutParams.setMargins(0, 0, 30, 30);
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_CODE_LOCATION:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                        if (mgoogleApiClient == null) {
+                            buildGoogleApiClient();
+                        }
+                        mGoogleMap.setMyLocationEnabled(true);
+                    }
+                } else {
+                    Toast.makeText(this, "permission denied...", Toast.LENGTH_SHORT).show();
+                }
         }
     }
 
@@ -127,11 +127,73 @@ public class MapActivity extends BaseActivity implements
         }
     }
 
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(1100);
+        mLocationRequest.setFastestInterval(1100);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            LocationServices.FusedLocationApi.requestLocationUpdates(mgoogleApiClient, mLocationRequest, this);
+        }
+    }
+
+
+    @Override
+    public void onLocationChanged(Location location) {
+        mlastLocation = location;
+        if (mcurrentUserLocationMarker != null) {
+            mcurrentUserLocationMarker.remove();
+        }
+        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(latLng);
+        markerOptions.title("i am here");
+        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+
+        mcurrentUserLocationMarker = mGoogleMap.addMarker(markerOptions);
+        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        mGoogleMap.animateCamera(CameraUpdateFactory.zoomBy(14));
+
+        if (mgoogleApiClient != null) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mgoogleApiClient, this);
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Toast.makeText(this, "Lỗi kết nối: " + connectionResult.getErrorMessage(), Toast.LENGTH_SHORT).show();
+    }
+
+    private void moveButtonLocation() {  //di chuyen button vitri xuong duoi
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().
+                findFragmentById(R.id.fragment_map);
+        View mapView = mapFragment.getView();
+        if (mapView != null && mapView.findViewById(1) != null) {
+            // Get the button view
+            View locationButton = ((View) mapView.findViewById(1).getParent()).findViewById(2);
+            // and next place it, on bottom right (as Google Maps app)
+            RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams)
+                    locationButton.getLayoutParams();
+            // position on right bottom
+            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
+            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
+            layoutParams.setMargins(0, 0, 30, 30);
+        }
+    }
+
     private void initRecyclerViews() {
         RecyclerView recyclerView = findViewById(R.id.recycler_view_place_search);
         recyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
         recyclerView.setAdapter(new PlaceSearchRVA(this, this));
     }
+
 
     private void initSearchView() {
         mSearchView = findViewById(R.id.search_view);
@@ -182,94 +244,28 @@ public class MapActivity extends BaseActivity implements
         }
     }
 
-    public void checkVersion(){//check version api
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+    public void checkVersion() {//check version api
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             checkUserLocationPermission();
         }
     }
 
-    public boolean checkUserLocationPermission(){//check  gtri location
-
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
-            if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)){
+    private void checkUserLocationPermission() {//check  gtri location
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_LOCATION);
-            }else {
+            } else {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_LOCATION);
             }
 
-            return false;
-        }else{
-            return true;
         }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode){
-            case REQUEST_CODE_LOCATION:
-                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                    if(ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION ) == PackageManager.PERMISSION_GRANTED){
-                        if(mgoogleApiClient == null){
-                            buildGoogleApiClient();
-                        }
-                        mGoogleMap.setMyLocationEnabled(true);
-                    }
-                }else{
-                    Toast.makeText(this, "permission denied...",Toast.LENGTH_SHORT).show();
-                }
-        }
-    }
-
-    protected synchronized void buildGoogleApiClient(){
+    private synchronized void buildGoogleApiClient() {
         mgoogleApiClient = new GoogleApiClient.Builder(this).addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this).addApi(LocationServices.API).build();
         mgoogleApiClient.connect();
-    }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(1100);
-        mLocationRequest.setFastestInterval(1100);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
-
-        if(ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
-            LocationServices.FusedLocationApi.requestLocationUpdates(mgoogleApiClient,mLocationRequest, this);
-        }
-    }
-
-
-    @Override
-    public void onLocationChanged(Location location) {
-        mlastLocation = location;
-        if(mcurrentUserLocationMarker != null){
-            mcurrentUserLocationMarker.remove();
-        }
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(latLng);
-        markerOptions.title("i am here");
-        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
-
-        mcurrentUserLocationMarker = mGoogleMap.addMarker(markerOptions);
-        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        mGoogleMap.animateCamera(CameraUpdateFactory.zoomBy(14));
-
-        if(mgoogleApiClient != null){
-            LocationServices.FusedLocationApi.removeLocationUpdates(mgoogleApiClient, this);
-        }
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Toast.makeText(this, "Lỗi kết nối: " + connectionResult.getErrorMessage(), Toast.LENGTH_SHORT).show();
     }
 }
