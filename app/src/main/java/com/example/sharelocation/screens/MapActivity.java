@@ -16,7 +16,11 @@ import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.widget.NestedScrollView;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.example.sharelocation.OnItemRecyclerViewClickListener;
 import com.example.sharelocation.R;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
@@ -38,12 +42,13 @@ public class MapActivity extends BaseActivity implements
         View.OnClickListener,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener {
+        LocationListener, OnItemRecyclerViewClickListener<Object> {
 
     private GoogleMap mGoogleMap;
     private ActionBarDrawerToggle mActionBarDrawerToggle;
     private SearchView mSearchView;
     private DrawerLayout mDrawerLayout;
+
     //them bien cho current location
     private GoogleApiClient mgoogleApiClient;
     private LocationRequest mLocationRequest;
@@ -51,7 +56,8 @@ public class MapActivity extends BaseActivity implements
     private Marker mcurrentUserLocationMarker;
     private static final int REQUEST_CODE_LOCATION = 111;
 
-    View mapView;
+    private NestedScrollView mNestedScrollView;
+    private View mViewBackground;
 
     @Override
     protected int getLayoutResource() {
@@ -60,9 +66,13 @@ public class MapActivity extends BaseActivity implements
 
     @Override
     protected void initComponents(@Nullable Bundle savedInstanceState) {
+        mNestedScrollView = findViewById(R.id.nested_scroll_view_search_result);
+        mViewBackground = findViewById(R.id.view_background);
+
         initGoogleMap();
         initToolBarAndDrawerLayout();
         initSearchView();
+        initRecyclerViews();
     }
 
     @Override
@@ -108,16 +118,35 @@ public class MapActivity extends BaseActivity implements
     public void onClick(View view) {
     }
 
+    @Override
+    public void onItemRecyclerViewClick(RecyclerView recyclerView, int position, Object data) {
+        switch (recyclerView.getId()) {
+            case R.id.recycler_view_place_search:
+                Toast.makeText(this, "" + position, Toast.LENGTH_SHORT).show();
+                break;
+        }
+    }
+
+    private void initRecyclerViews() {
+        RecyclerView recyclerView = findViewById(R.id.recycler_view_place_search);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
+        recyclerView.setAdapter(new PlaceSearchRVA(this, this));
+    }
+
     private void initSearchView() {
         mSearchView = findViewById(R.id.search_view);
         mSearchView.setOnQueryTextFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean focus) {
                 if (focus) {
+                    mNestedScrollView.setVisibility(View.VISIBLE);
+                    mViewBackground.setVisibility(View.VISIBLE);
                     mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
                     mActionBarDrawerToggle.setDrawerIndicatorEnabled(false);
                     getSupportActionBar().setDisplayHomeAsUpEnabled(true);
                 } else {
+                    mViewBackground.setVisibility(View.GONE);
+                    mNestedScrollView.setVisibility(View.GONE);
                     mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
                     getSupportActionBar().setDisplayHomeAsUpEnabled(false);
                     mActionBarDrawerToggle.setDrawerIndicatorEnabled(true);
