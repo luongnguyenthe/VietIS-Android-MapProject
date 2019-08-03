@@ -1,4 +1,4 @@
-package com.example.sharelocation;
+package com.example.sharelocation.screens.map;
 
 import androidx.recyclerview.widget.RecyclerView;
 
