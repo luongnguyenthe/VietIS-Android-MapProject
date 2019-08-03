@@ -1,4 +1,4 @@
-package com.example.sharelocation.screens;
+package com.example.sharelocation.screens.map;
 
 
 import android.Manifest;
@@ -20,8 +20,11 @@ import androidx.core.widget.NestedScrollView;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import com.example.sharelocation.OnItemRecyclerViewClickListener;
 import com.example.sharelocation.R;
+import com.example.sharelocation.data.model.Place;
+import com.example.sharelocation.screens.BaseActivity;
+import com.example.sharelocation.data.OnRequestDataListener;
+import com.example.sharelocation.data.ReadJSON;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -29,35 +32,38 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.common.ConnectionResult;//lay thu vien nay sua
-import com.google.android.gms.location.LocationListener;//thay doi thu vien tren
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import android.widget.RelativeLayout;
 
+import java.util.List;
+
 public class MapActivity extends BaseActivity implements
         OnMapReadyCallback,
         View.OnClickListener,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener, OnItemRecyclerViewClickListener<Object> {
+        LocationListener {
 
+    // Final variables
+    private static final int REQUEST_CODE_LOCATION = 111;
+
+    // View variables
     private GoogleMap mGoogleMap;
     private ActionBarDrawerToggle mActionBarDrawerToggle;
     private SearchView mSearchView;
     private DrawerLayout mDrawerLayout;
-
-    //them bien cho current location
-    private GoogleApiClient mgoogleApiClient;
-    private LocationRequest mLocationRequest;
-    private Location mlastLocation;
-    private Marker mcurrentUserLocationMarker;
-    private static final int REQUEST_CODE_LOCATION = 111;
-
     private NestedScrollView mNestedScrollView;
     private View mViewBackground;
+    private Marker mCurrentUserLocationMarker;
+    private PlaceSearchRVA mPlaceSearchRVA;
+
+    // Others variables
+    private GoogleApiClient mGoogleApiClient;
 
     @Override
     protected int getLayoutResource() {
@@ -88,7 +94,6 @@ public class MapActivity extends BaseActivity implements
         mGoogleMap = googleMap;
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            //TODO: Consider Calling
             buildGoogleApiClient();
             mGoogleMap.setMyLocationEnabled(true);
         }
@@ -103,7 +108,7 @@ public class MapActivity extends BaseActivity implements
             case REQUEST_CODE_LOCATION:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                        if (mgoogleApiClient == null) {
+                        if (mGoogleApiClient == null) {
                             buildGoogleApiClient();
                         }
                         mGoogleMap.setMyLocationEnabled(true);
@@ -119,32 +124,22 @@ public class MapActivity extends BaseActivity implements
     }
 
     @Override
-    public void onItemRecyclerViewClick(RecyclerView recyclerView, int position, Object data) {
-        switch (recyclerView.getId()) {
-            case R.id.recycler_view_place_search:
-                Toast.makeText(this, "" + position, Toast.LENGTH_SHORT).show();
-                break;
-        }
-    }
-
-    @Override
     public void onConnected(@Nullable Bundle bundle) {
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(1100);
-        mLocationRequest.setFastestInterval(1100);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+        LocationRequest locationRequest = new LocationRequest();
+        locationRequest.setInterval(1100);
+        locationRequest.setFastestInterval(1100);
+        locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            LocationServices.FusedLocationApi.requestLocationUpdates(mgoogleApiClient, mLocationRequest, this);
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, this);
         }
     }
 
 
     @Override
     public void onLocationChanged(Location location) {
-        mlastLocation = location;
-        if (mcurrentUserLocationMarker != null) {
-            mcurrentUserLocationMarker.remove();
+        if (mCurrentUserLocationMarker != null) {
+            mCurrentUserLocationMarker.remove();
         }
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
         MarkerOptions markerOptions = new MarkerOptions();
@@ -152,12 +147,12 @@ public class MapActivity extends BaseActivity implements
         markerOptions.title("i am here");
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
 
-        mcurrentUserLocationMarker = mGoogleMap.addMarker(markerOptions);
+        mCurrentUserLocationMarker = mGoogleMap.addMarker(markerOptions);
         mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         mGoogleMap.animateCamera(CameraUpdateFactory.zoomBy(14));
 
-        if (mgoogleApiClient != null) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(mgoogleApiClient, this);
+        if (mGoogleApiClient != null) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         }
     }
 
@@ -171,7 +166,7 @@ public class MapActivity extends BaseActivity implements
         Toast.makeText(this, "Lỗi kết nối: " + connectionResult.getErrorMessage(), Toast.LENGTH_SHORT).show();
     }
 
-    private void moveButtonLocation() {  //di chuyen button vitri xuong duoi
+    private void moveButtonLocation() {
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().
                 findFragmentById(R.id.fragment_map);
         View mapView = mapFragment.getView();
@@ -188,15 +183,39 @@ public class MapActivity extends BaseActivity implements
         }
     }
 
+    private void initJSON(String s) {
+        s = s.replaceAll("\\s", "");
+        new ReadJSON(new OnRequestDataListener<List<Place>>() {
+            @Override
+            public void onRequestDataSuccess(List<Place> places) {
+                mPlaceSearchRVA.setPlaces(places);
+            }
+
+            @Override
+            public void onRequestDataFailure() {
+                Toast.makeText(MapActivity.this, "fail", Toast.LENGTH_SHORT).show();
+            }
+        }).execute("https://places.cit.api.here.com/places/v1/autosuggest?app_id=Qx5JS0HLu1snSuxn1SXQ&app_code=azSrplQGcMhkfV-XA50rWw&at=16.000,106.000&q=" + s + "&pretty");
+
+    }
+
     private void initRecyclerViews() {
+        mPlaceSearchRVA = new PlaceSearchRVA(this, new OnItemRecyclerViewClickListener<Place>() {
+            @Override
+            public void onItemRecyclerViewClick(RecyclerView recyclerView, int position, Place data) {
+
+            }
+        });
+
         RecyclerView recyclerView = findViewById(R.id.recycler_view_place_search);
         recyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
-        recyclerView.setAdapter(new PlaceSearchRVA(this, this));
+        recyclerView.setAdapter(mPlaceSearchRVA);
     }
 
 
     private void initSearchView() {
         mSearchView = findViewById(R.id.search_view);
+
         mSearchView.setOnQueryTextFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean focus) {
@@ -213,6 +232,20 @@ public class MapActivity extends BaseActivity implements
                     getSupportActionBar().setDisplayHomeAsUpEnabled(false);
                     mActionBarDrawerToggle.setDrawerIndicatorEnabled(true);
                 }
+            }
+        });
+
+        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                mPlaceSearchRVA.clearPlaces();
+                if (!query.equals("")) initJSON(query);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
             }
         });
     }
@@ -244,13 +277,13 @@ public class MapActivity extends BaseActivity implements
         }
     }
 
-    public void checkVersion() {//check version api
+    public void checkVersion() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             checkUserLocationPermission();
         }
     }
 
-    private void checkUserLocationPermission() {//check  gtri location
+    private void checkUserLocationPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
                 ActivityCompat.requestPermissions(this,
@@ -264,8 +297,8 @@ public class MapActivity extends BaseActivity implements
     }
 
     private synchronized void buildGoogleApiClient() {
-        mgoogleApiClient = new GoogleApiClient.Builder(this).addConnectionCallbacks(this)
+        mGoogleApiClient = new GoogleApiClient.Builder(this).addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this).addApi(LocationServices.API).build();
-        mgoogleApiClient.connect();
+        mGoogleApiClient.connect();
     }
 }
