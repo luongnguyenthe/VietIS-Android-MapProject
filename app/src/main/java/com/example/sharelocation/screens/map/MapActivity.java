@@ -8,6 +8,7 @@ import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,10 +22,11 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.sharelocation.R;
+import com.example.sharelocation.data.local.MapLocalDataSource;
 import com.example.sharelocation.data.model.Place;
+import com.example.sharelocation.data.remote.MapRemoteDataSource;
+import com.example.sharelocation.data.repository.MapRepository;
 import com.example.sharelocation.screens.BaseActivity;
-import com.example.sharelocation.data.OnRequestDataListener;
-import com.example.sharelocation.data.ReadJSON;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -47,7 +49,7 @@ public class MapActivity extends BaseActivity implements
         View.OnClickListener,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener {
+        LocationListener, MapScreenContract.View {
 
     // Final variables
     private static final int REQUEST_CODE_LOCATION = 111;
@@ -61,9 +63,12 @@ public class MapActivity extends BaseActivity implements
     private View mViewBackground;
     private Marker mCurrentUserLocationMarker;
     private PlaceSearchRVA mPlaceSearchRVA;
+    private ProgressBar mLoadingIndicatorSearch;
 
     // Others variables
     private GoogleApiClient mGoogleApiClient;
+
+    private MapScreenContract.Presenter mPresenter;
 
     @Override
     protected int getLayoutResource() {
@@ -72,8 +77,12 @@ public class MapActivity extends BaseActivity implements
 
     @Override
     protected void initComponents(@Nullable Bundle savedInstanceState) {
+        mPresenter = new MapScreenPresenter(MapRepository.getInstance(MapLocalDataSource.getInstance(), MapRemoteDataSource.getInstance()));
+        mPresenter.setView(this);
+
         mNestedScrollView = findViewById(R.id.nested_scroll_view_search_result);
         mViewBackground = findViewById(R.id.view_background);
+        mLoadingIndicatorSearch = findViewById(R.id.progress_bar_search);
 
         initGoogleMap();
         initToolBarAndDrawerLayout();
@@ -166,6 +175,7 @@ public class MapActivity extends BaseActivity implements
         Toast.makeText(this, "Lỗi kết nối: " + connectionResult.getErrorMessage(), Toast.LENGTH_SHORT).show();
     }
 
+    @SuppressLint("ResourceType")
     private void moveButtonLocation() {
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().
                 findFragmentById(R.id.fragment_map);
@@ -183,20 +193,24 @@ public class MapActivity extends BaseActivity implements
         }
     }
 
-    private void initJSON(String s) {
-        s = s.replaceAll("\\s", "");
-        new ReadJSON(new OnRequestDataListener<List<Place>>() {
-            @Override
-            public void onRequestDataSuccess(List<Place> places) {
-                mPlaceSearchRVA.setPlaces(places);
-            }
+    @Override
+    public void showIndicatorForFindingPlace() {
+        mLoadingIndicatorSearch.setVisibility(View.VISIBLE);
+    }
 
-            @Override
-            public void onRequestDataFailure() {
-                Toast.makeText(MapActivity.this, "fail", Toast.LENGTH_SHORT).show();
-            }
-        }).execute("https://places.cit.api.here.com/places/v1/autosuggest?app_id=Qx5JS0HLu1snSuxn1SXQ&app_code=azSrplQGcMhkfV-XA50rWw&at=16.000,106.000&q=" + s + "&pretty");
+    @Override
+    public void hideIndicatorForFindingPlace() {
+        mLoadingIndicatorSearch.setVisibility(View.GONE);
+    }
 
+    @Override
+    public void findPlaceRequestSuccessful(List<Place> places) {
+        mPlaceSearchRVA.setPlaces(places);
+    }
+
+    @Override
+    public void findPlaceRequestFailed(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     private void initRecyclerViews() {
@@ -239,7 +253,7 @@ public class MapActivity extends BaseActivity implements
             @Override
             public boolean onQueryTextSubmit(String query) {
                 mPlaceSearchRVA.clearPlaces();
-                if (!query.equals("")) initJSON(query);
+                if (!query.equals("")) mPresenter.findPlace(query);
                 return false;
             }
 
