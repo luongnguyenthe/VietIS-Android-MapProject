@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.sharelocation.R;
 import com.example.sharelocation.data.model.Place;
+import com.example.sharelocation.screens.OnItemRecyclerViewClickListener;
 
 import java.util.List;
 

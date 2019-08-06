@@ -16,7 +16,6 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.widget.NestedScrollView;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -27,29 +26,21 @@ import com.example.sharelocation.data.model.Place;
 import com.example.sharelocation.data.remote.MapRemoteDataSource;
 import com.example.sharelocation.data.repository.MapRepository;
 import com.example.sharelocation.screens.BaseActivity;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationRequest;
+import com.example.sharelocation.screens.OnItemRecyclerViewClickListener;
+import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 import android.widget.RelativeLayout;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 
 import java.util.List;
 
-public class MapActivity extends BaseActivity implements
-        OnMapReadyCallback,
-        View.OnClickListener,
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener,
-        LocationListener, MapScreenContract.View {
+public class MapActivity extends BaseActivity implements OnMapReadyCallback, View.OnClickListener, MapScreenContract.View {
 
     // Final variables
     private static final int REQUEST_CODE_LOCATION = 111;
@@ -61,12 +52,8 @@ public class MapActivity extends BaseActivity implements
     private DrawerLayout mDrawerLayout;
     private NestedScrollView mNestedScrollView;
     private View mViewBackground;
-    private Marker mCurrentUserLocationMarker;
     private PlaceSearchRVA mPlaceSearchRVA;
     private ProgressBar mLoadingIndicatorSearch;
-
-    // Others variables
-    private GoogleApiClient mGoogleApiClient;
 
     private MapScreenContract.Presenter mPresenter;
 
@@ -96,19 +83,12 @@ public class MapActivity extends BaseActivity implements
         mActionBarDrawerToggle.syncState();
     }
 
-
     @SuppressLint("ResourceType")
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mGoogleMap = googleMap;
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            buildGoogleApiClient();
-            mGoogleMap.setMyLocationEnabled(true);
-        }
-
         moveButtonLocation();
-
+        requestLocationPermission();
     }
 
     @Override
@@ -116,12 +96,7 @@ public class MapActivity extends BaseActivity implements
         switch (requestCode) {
             case REQUEST_CODE_LOCATION:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                        if (mGoogleApiClient == null) {
-                            buildGoogleApiClient();
-                        }
-                        mGoogleMap.setMyLocationEnabled(true);
-                    }
+                    buildGoogleApiClient();
                 } else {
                     Toast.makeText(this, "permission denied...", Toast.LENGTH_SHORT).show();
                 }
@@ -130,49 +105,6 @@ public class MapActivity extends BaseActivity implements
 
     @Override
     public void onClick(View view) {
-    }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setInterval(1100);
-        locationRequest.setFastestInterval(1100);
-        locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, this);
-        }
-    }
-
-
-    @Override
-    public void onLocationChanged(Location location) {
-        if (mCurrentUserLocationMarker != null) {
-            mCurrentUserLocationMarker.remove();
-        }
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(latLng);
-        markerOptions.title("i am here");
-        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
-
-        mCurrentUserLocationMarker = mGoogleMap.addMarker(markerOptions);
-        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        mGoogleMap.animateCamera(CameraUpdateFactory.zoomBy(14));
-
-        if (mGoogleApiClient != null) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-        }
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Toast.makeText(this, "Lỗi kết nối: " + connectionResult.getErrorMessage(), Toast.LENGTH_SHORT).show();
     }
 
     @SuppressLint("ResourceType")
@@ -283,36 +215,41 @@ public class MapActivity extends BaseActivity implements
     private void initGoogleMap() {
         SupportMapFragment supportMapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.fragment_map);
-
-        checkVersion();
-
-        if (supportMapFragment != null) {
-            supportMapFragment.getMapAsync(this);
-        }
+        supportMapFragment.getMapAsync(this);
     }
 
-    public void checkVersion() {
+    private void requestLocationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            checkUserLocationPermission();
-        }
-    }
-
-    private void checkUserLocationPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_LOCATION);
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_CODE_LOCATION);
             } else {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_LOCATION);
+                buildGoogleApiClient();
             }
-
+        } else {
+            buildGoogleApiClient();
         }
     }
 
-    private synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(this).addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this).addApi(LocationServices.API).build();
-        mGoogleApiClient.connect();
+    @SuppressLint("MissingPermission")
+    private void buildGoogleApiClient() {
+        mGoogleMap.setMyLocationEnabled(true);
+        // Others variables
+        FusedLocationProviderClient fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        fusedLocationProviderClient.getLastLocation().addOnCompleteListener(this, new OnCompleteListener<Location>() {
+            @Override
+            public void onComplete(@NonNull Task<Location> task) {
+                if (task.isSuccessful()) {
+                    moveCameraMap(new LatLng(task.getResult().getLatitude(), task.getResult().getLongitude()));
+                } else {
+                    mGoogleMap.getUiSettings().setMyLocationButtonEnabled(false);
+                }
+            }
+        });
+    }
+
+    private void moveCameraMap(LatLng latLng) {
+        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
     }
 }
