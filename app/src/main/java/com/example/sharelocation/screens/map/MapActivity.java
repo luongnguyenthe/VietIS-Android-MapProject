@@ -33,10 +33,11 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.*;
 import android.widget.RelativeLayout;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.card.MaterialCardView;
 
 import java.util.List;
 
@@ -54,8 +55,14 @@ public class MapActivity extends BaseActivity implements OnMapReadyCallback, Vie
     private View mViewBackground;
     private PlaceSearchRVA mPlaceSearchRVA;
     private ProgressBar mLoadingIndicatorSearch;
+    private MaterialCardView mCardViewDirection;
+    private ProgressBar mProgressBarDirection;
 
     private MapScreenContract.Presenter mPresenter;
+
+    private Marker mMarkerPlaceSearch;
+    private LatLng mMyCurrentLocation;
+    private Polyline mCurrentPolyline;
 
     @Override
     protected int getLayoutResource() {
@@ -70,6 +77,9 @@ public class MapActivity extends BaseActivity implements OnMapReadyCallback, Vie
         mNestedScrollView = findViewById(R.id.nested_scroll_view_search_result);
         mViewBackground = findViewById(R.id.view_background);
         mLoadingIndicatorSearch = findViewById(R.id.progress_bar_search);
+        mCardViewDirection = findViewById(R.id.card_view_direction);
+        mCardViewDirection.setOnClickListener(this);
+        mProgressBarDirection = findViewById(R.id.progress_bar_direction);
 
         initGoogleMap();
         initToolBarAndDrawerLayout();
@@ -87,6 +97,7 @@ public class MapActivity extends BaseActivity implements OnMapReadyCallback, Vie
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mGoogleMap = googleMap;
+        mGoogleMap.getUiSettings().setMapToolbarEnabled(false);
         moveButtonLocation();
         requestLocationPermission();
     }
@@ -105,6 +116,16 @@ public class MapActivity extends BaseActivity implements OnMapReadyCallback, Vie
 
     @Override
     public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.card_view_direction:
+                if (mMarkerPlaceSearch == null || mMyCurrentLocation == null) break;
+                if (mCurrentPolyline != null) {
+                    mCurrentPolyline.remove();
+                    mCurrentPolyline = null;
+                }
+                mPresenter.findDirection(mMyCurrentLocation, mMarkerPlaceSearch.getPosition());
+                break;
+        }
     }
 
     @SuppressLint("ResourceType")
@@ -145,11 +166,46 @@ public class MapActivity extends BaseActivity implements OnMapReadyCallback, Vie
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
+    @Override
+    public void showIndicatorForFindingDirection() {
+        mProgressBarDirection.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void hideIndicatorForFindingDirection() {
+        mProgressBarDirection.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void findDirectionSuccessful(List<LatLng> latLngList) {
+        drawPolyline(latLngList);
+        moveCameraMap(mMarkerPlaceSearch.getPosition());
+    }
+
+    private void drawPolyline(List<LatLng> latLngList) {
+        LatLng[] latLngArr = new LatLng[latLngList.size()];
+        latLngArr = latLngList.toArray(latLngArr);
+
+        mCurrentPolyline = mGoogleMap.addPolyline(new PolylineOptions().add(latLngArr));
+    }
+
+    @Override
+    public void findDirectionFailed(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
     private void initRecyclerViews() {
         mPlaceSearchRVA = new PlaceSearchRVA(this, new OnItemRecyclerViewClickListener<Place>() {
             @Override
-            public void onItemRecyclerViewClick(RecyclerView recyclerView, int position, Place data) {
-
+            public void onItemRecyclerViewClick(RecyclerView recyclerView, int position, Place place) {
+                mGoogleMap.clear();
+                mCardViewDirection.setVisibility(View.VISIBLE);
+                mSearchView.clearFocus();
+                mMarkerPlaceSearch = mGoogleMap.addMarker(new MarkerOptions()
+                        .position(new LatLng(place.getLatitude(), place.getLongtitude()))
+                        .title(place.getName()));
+                mMarkerPlaceSearch.showInfoWindow();
+                moveCameraMap(new LatLng(place.getLatitude(), place.getLongtitude()));
             }
         });
 
@@ -241,7 +297,8 @@ public class MapActivity extends BaseActivity implements OnMapReadyCallback, Vie
             @Override
             public void onComplete(@NonNull Task<Location> task) {
                 if (task.isSuccessful()) {
-                    moveCameraMap(new LatLng(task.getResult().getLatitude(), task.getResult().getLongitude()));
+                    mMyCurrentLocation = new LatLng(task.getResult().getLatitude(), task.getResult().getLongitude());
+                    moveCameraMap(mMyCurrentLocation);
                 } else {
                     mGoogleMap.getUiSettings().setMyLocationButtonEnabled(false);
                 }
@@ -250,6 +307,6 @@ public class MapActivity extends BaseActivity implements OnMapReadyCallback, Vie
     }
 
     private void moveCameraMap(LatLng latLng) {
-        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
+        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
     }
 }

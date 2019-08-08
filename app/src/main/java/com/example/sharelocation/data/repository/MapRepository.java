@@ -3,6 +3,7 @@ package com.example.sharelocation.data.repository;
 import com.example.sharelocation.data.MapDataSource;
 import com.example.sharelocation.data.OnRequestDataListener;
 import com.example.sharelocation.data.model.Place;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.util.List;
 
@@ -29,5 +30,10 @@ public class MapRepository implements MapDataSource.LocalDataSource, MapDataSour
     @Override
     public void findPlace(String name, OnRequestDataListener<List<Place>> listener) {
         mRemoteDataSource.findPlace(name, listener);
+    }
+
+    @Override
+    public void findDirection(LatLng start, LatLng end, OnRequestDataListener<List<LatLng>> listener) {
+        mRemoteDataSource.findDirection(start, end, listener);
     }
 }

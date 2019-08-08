@@ -13,35 +13,46 @@ public class Place {
         this.mLongtitude = mLongtitude;
     }
 
-    public String getmName() {
+    public String getName() {
         return mName;
     }
 
-    public void setmName(String mName) {
-        this.mName = mName;
+    public void setName(String name) {
+        mName = name;
     }
 
-    public String getmAddress() {
+    public String getAddress() {
         return mAddress;
     }
 
-    public void setmAddress(String mAddress) {
-        this.mAddress = mAddress;
+    public void setAddress(String address) {
+        mAddress = address;
     }
 
-    public Double getmLatitude() {
+    public Double getLatitude() {
         return mLatitude;
     }
 
-    public void setmLatitude(Double mLatitude) {
-        this.mLatitude = mLatitude;
+    public void setLatitude(Double latitude) {
+        mLatitude = latitude;
     }
 
-    public Double getmLongtitude() {
+    public Double getLongtitude() {
         return mLongtitude;
     }
 
-    public void setmLongtitude(Double mLongtitude) {
-        this.mLongtitude = mLongtitude;
+    public void setLongtitude(Double longtitude) {
+        mLongtitude = longtitude;
+    }
+
+    @Override
+    public String toString() {
+        return "Place{" +
+                "mName='" + mName + '\'' +
+                ", mAddress='" + mAddress + '\'' +
+                ", mLatitude=" + mLatitude +
+                ", mLongtitude=" + mLongtitude +
+                '}';
     }
 }
+

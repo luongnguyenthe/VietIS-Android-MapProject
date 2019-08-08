@@ -1,6 +1,7 @@
-package com.example.sharelocation.data.remote;
+package com.example.sharelocation.data.remote.request;
 
 import android.os.AsyncTask;
+import android.util.Log;
 import com.example.sharelocation.data.OnRequestDataListener;
 import org.json.JSONException;
 
@@ -25,6 +26,7 @@ public abstract class HttpGetRequest<T> extends AsyncTask<String, Void, String> 
     @Override
     protected String doInBackground(String... strings) {
         String stringUrl = strings[0];
+        Log.d("HttpGetRequest", stringUrl);
         String result;
         String inputLine;
         try {

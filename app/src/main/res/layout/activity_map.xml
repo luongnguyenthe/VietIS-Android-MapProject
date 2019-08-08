@@ -30,6 +30,36 @@
             android:layout_height="match_parent"
             android:animateLayoutChanges="true">
 
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_view_direction"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="12dp"
+                android:layout_marginBottom="64dp"
+                android:visibility="gone"
+                app:cardElevation="0dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_directions_black_24dp"
+                    app:tint="#4A89F3" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <ProgressBar
+                android:id="@+id/progress_bar_direction"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
             <View
                 android:id="@+id/view_background"
                 android:layout_width="0dp"
@@ -87,33 +117,6 @@
                     </androidx.appcompat.widget.LinearLayoutCompat>
                 </androidx.appcompat.widget.Toolbar>
             </com.google.android.material.card.MaterialCardView>
-
-            <androidx.core.widget.NestedScrollView
-                android:id="@+id/nested_scroll_view_search_place_result"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:visibility="gone"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/card_view_search">
-
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@android:color/white"
-                    app:cardUseCompatPadding="true">
-
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/recycler_view_place_search_result"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-
-
-                </com.google.android.material.card.MaterialCardView>
-            </androidx.core.widget.NestedScrollView>
 
             <androidx.core.widget.NestedScrollView
                 android:id="@+id/nested_scroll_view_search_result"
