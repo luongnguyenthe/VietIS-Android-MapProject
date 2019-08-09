@@ -21,7 +21,9 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/key_map_api" />
 
-        <activity android:name=".screens.map.MapActivity">
+        <activity
+            android:name=".screens.map.MapActivity"
+            android:windowSoftInputMode="adjustResize">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

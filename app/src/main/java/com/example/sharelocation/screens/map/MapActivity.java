@@ -3,12 +3,15 @@ package com.example.sharelocation.screens.map;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Rect;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
+import android.view.ViewTreeObserver;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -21,6 +24,7 @@ import androidx.core.widget.NestedScrollView;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.example.sharelocation.widgets.CustomSearchView;
 import com.example.sharelocation.R;
 import com.example.sharelocation.data.local.MapLocalDataSource;
 import com.example.sharelocation.data.model.Place;
@@ -54,7 +58,7 @@ public class MapActivity extends BaseActivity implements OnMapReadyCallback, Vie
     // View variables
     private GoogleMap mGoogleMap;
     private ActionBarDrawerToggle mActionBarDrawerToggle;
-    private SearchView mSearchView;
+    private CustomSearchView mSearchView;
     private DrawerLayout mDrawerLayout;
     private NestedScrollView mNestedScrollView;
     private ProgressBar mLoadingIndicatorSearch;
@@ -66,6 +70,7 @@ public class MapActivity extends BaseActivity implements OnMapReadyCallback, Vie
     private Marker mMarkerPlaceSearch;
     private LatLng mMyCurrentLocation;
     private Polyline mCurrentPolyline;
+    private boolean mKeyboardVisible;
 
     @Override
     protected int getLayoutResource() {
@@ -230,6 +235,18 @@ public class MapActivity extends BaseActivity implements OnMapReadyCallback, Vie
     private void initSearchView() {
         mSearchView = findViewById(R.id.search_view);
 
+        mSearchView.setOnBackPressedSearchViewListener(new CustomSearchView.OnBackPressedSearchViewListener() {
+            @Override
+            public boolean needHideSoftKeyboard() {
+                if (mKeyboardVisible) {
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(mSearchView.getWindowToken(), 0);
+                    return true;
+                }
+                return false;
+            }
+        });
+
         mSearchView.setOnQueryTextFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean focus) {
@@ -281,6 +298,26 @@ public class MapActivity extends BaseActivity implements OnMapReadyCallback, Vie
         });
 
         mDrawerLayout.addDrawerListener(mActionBarDrawerToggle);
+
+        mDrawerLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                Rect rec = new Rect();
+                mDrawerLayout.getWindowVisibleDisplayFrame(rec);
+
+                //finding screen height
+                int screenHeight = mDrawerLayout.getRootView().getHeight();
+
+                //finding keyboard height
+                int keypadHeight = screenHeight - rec.bottom;
+
+                if (keypadHeight > screenHeight * 0.15) {
+                    mKeyboardVisible = true;
+                } else {
+                    mKeyboardVisible = false;
+                }
+            }
+        });
     }
 
     private void initGoogleMap() {

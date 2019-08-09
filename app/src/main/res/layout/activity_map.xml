@@ -27,7 +27,8 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/constraint_layout_main"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:animateLayoutChanges="true">
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/card_view_direction"
@@ -81,7 +82,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
 
-                        <androidx.appcompat.widget.SearchView
+                        <com.example.sharelocation.widgets.CustomSearchView
                             android:id="@+id/search_view"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
