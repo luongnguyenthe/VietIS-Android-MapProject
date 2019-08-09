@@ -1,4 +1,4 @@
-package com.example.sharelocation.data.remote;
+package com.example.sharelocation.data.remote.request;
 
 import com.example.sharelocation.data.OnRequestDataListener;
 import com.example.sharelocation.data.model.Place;

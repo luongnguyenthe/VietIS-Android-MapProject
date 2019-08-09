@@ -75,14 +75,15 @@ public class PlaceSearchRVA extends RecyclerView.Adapter<PlaceSearchRVA.ViewHold
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    mListener.onItemRecyclerViewClick(mRecyclerView, getAdapterPosition(), null);
+                    if (mListener == null || mPlaces == null) return;
+                    mListener.onItemRecyclerViewClick(mRecyclerView, getAdapterPosition(), mPlaces.get(getAdapterPosition()));
                 }
             });
         }
 
         void bindData(Place place) {
-            mTextViewName.setText(place.getmName());
-            mTextViewAddress.setText(place.getmAddress());
+            mTextViewName.setText(place.getName());
+            mTextViewAddress.setText(place.getAddress());
         }
     }
 }
