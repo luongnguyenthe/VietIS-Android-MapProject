@@ -2,6 +2,7 @@ package com.example.sharelocation.data.remote.request;
 
 import com.example.sharelocation.data.OnRequestDataListener;
 import com.example.sharelocation.data.model.Place;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,7 +30,7 @@ public class FindPlaceRequest extends HttpGetRequest<List<Place>> {
             for (int j = 0; j < position.length(); j++) {
                 Double latitude = position.getDouble(0);
                 Double longitude = position.getDouble(1);
-                places.add(new Place(title, address, latitude, longitude));
+                places.add(new Place(0, title, address, latitude, longitude));
             }
         }
         return places;

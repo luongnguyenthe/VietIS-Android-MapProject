@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -35,6 +36,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.*;
 import android.widget.RelativeLayout;
+
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.card.MaterialCardView;
@@ -46,19 +49,19 @@ public class MapActivity extends BaseActivity implements OnMapReadyCallback, Vie
     // Final variables
     private static final int REQUEST_CODE_LOCATION = 111;
 
+    private MapScreenContract.Presenter mPresenter;
+
     // View variables
     private GoogleMap mGoogleMap;
     private ActionBarDrawerToggle mActionBarDrawerToggle;
     private SearchView mSearchView;
     private DrawerLayout mDrawerLayout;
     private NestedScrollView mNestedScrollView;
-    private View mViewBackground;
-    private PlaceSearchRVA mPlaceSearchRVA;
     private ProgressBar mLoadingIndicatorSearch;
-    private MaterialCardView mCardViewDirection;
     private ProgressBar mProgressBarDirection;
+    private MaterialCardView mCardViewDirection;
 
-    private MapScreenContract.Presenter mPresenter;
+    private PlaceSearchRVA mPlaceSearchRVA;
 
     private Marker mMarkerPlaceSearch;
     private LatLng mMyCurrentLocation;
@@ -71,11 +74,10 @@ public class MapActivity extends BaseActivity implements OnMapReadyCallback, Vie
 
     @Override
     protected void initComponents(@Nullable Bundle savedInstanceState) {
-        mPresenter = new MapScreenPresenter(MapRepository.getInstance(MapLocalDataSource.getInstance(), MapRemoteDataSource.getInstance()));
+        mPresenter = new MapScreenPresenter(MapRepository.getInstance(MapLocalDataSource.getInstance(this), MapRemoteDataSource.getInstance()));
         mPresenter.setView(this);
 
         mNestedScrollView = findViewById(R.id.nested_scroll_view_search_result);
-        mViewBackground = findViewById(R.id.view_background);
         mLoadingIndicatorSearch = findViewById(R.id.progress_bar_search);
         mCardViewDirection = findViewById(R.id.card_view_direction);
         mCardViewDirection.setOnClickListener(this);
@@ -146,6 +148,12 @@ public class MapActivity extends BaseActivity implements OnMapReadyCallback, Vie
         }
     }
 
+
+    @Override
+    public void showListPlaceHistory(List<Place> places) {
+        mPlaceSearchRVA.setPlaces(places);
+    }
+
     @Override
     public void showIndicatorForFindingPlace() {
         mLoadingIndicatorSearch.setVisibility(View.VISIBLE);
@@ -182,16 +190,16 @@ public class MapActivity extends BaseActivity implements OnMapReadyCallback, Vie
         moveCameraMap(mMarkerPlaceSearch.getPosition());
     }
 
+    @Override
+    public void findDirectionFailed(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
     private void drawPolyline(List<LatLng> latLngList) {
         LatLng[] latLngArr = new LatLng[latLngList.size()];
         latLngArr = latLngList.toArray(latLngArr);
 
         mCurrentPolyline = mGoogleMap.addPolyline(new PolylineOptions().add(latLngArr));
-    }
-
-    @Override
-    public void findDirectionFailed(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     private void initRecyclerViews() {
@@ -202,18 +210,22 @@ public class MapActivity extends BaseActivity implements OnMapReadyCallback, Vie
                 mCardViewDirection.setVisibility(View.VISIBLE);
                 mSearchView.clearFocus();
                 mMarkerPlaceSearch = mGoogleMap.addMarker(new MarkerOptions()
-                        .position(new LatLng(place.getLatitude(), place.getLongtitude()))
+                        .position(new LatLng(place.getLatitude(), place.getLongitude()))
                         .title(place.getName()));
                 mMarkerPlaceSearch.showInfoWindow();
-                moveCameraMap(new LatLng(place.getLatitude(), place.getLongtitude()));
+                moveCameraMap(new LatLng(place.getLatitude(), place.getLongitude()));
+
+                if (place.getID() == 0) {
+                    mPresenter.savePlace(place);
+                }
             }
         });
 
         RecyclerView recyclerView = findViewById(R.id.recycler_view_place_search);
         recyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
         recyclerView.setAdapter(mPlaceSearchRVA);
+        mPresenter.getAllPlaceHistory();
     }
-
 
     private void initSearchView() {
         mSearchView = findViewById(R.id.search_view);
@@ -223,12 +235,10 @@ public class MapActivity extends BaseActivity implements OnMapReadyCallback, Vie
             public void onFocusChange(View view, boolean focus) {
                 if (focus) {
                     mNestedScrollView.setVisibility(View.VISIBLE);
-                    mViewBackground.setVisibility(View.VISIBLE);
                     mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
                     mActionBarDrawerToggle.setDrawerIndicatorEnabled(false);
                     getSupportActionBar().setDisplayHomeAsUpEnabled(true);
                 } else {
-                    mViewBackground.setVisibility(View.GONE);
                     mNestedScrollView.setVisibility(View.GONE);
                     mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
                     getSupportActionBar().setDisplayHomeAsUpEnabled(false);
@@ -241,12 +251,17 @@ public class MapActivity extends BaseActivity implements OnMapReadyCallback, Vie
             @Override
             public boolean onQueryTextSubmit(String query) {
                 mPlaceSearchRVA.clearPlaces();
-                if (!query.equals("")) mPresenter.findPlace(query);
+                if (!query.equals("")) {
+                    mPresenter.findPlace(query);
+                }
                 return false;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
+                if (newText.length() == 0) {
+                    mPresenter.getAllPlaceHistory();
+                }
                 return false;
             }
         });

@@ -24,9 +24,9 @@ public class MapRemoteDataSource implements MapDataSource.RemoteDataSource {
 
     @Override
     public void findPlace(String name, OnRequestDataListener<List<Place>> listener) {
-        name = name.replaceAll("\\s", "");
+        name = name.replaceAll("\\s", "+");
         new FindPlaceRequest(listener)
-                .execute("https://places.cit.api.here.com/places/v1/autosuggest?app_id=Qx5JS0HLu1snSuxn1SXQ&app_code=azSrplQGcMhkfV-XA50rWw&at=16.000,106.000&q=" + name + "&pretty");
+                .execute("https://places.cit.api.here.com/places/v1/autosuggest?at=16.000%2C106.000&q=" + name + "&Accept-Language=en-US&app_id=Qx5JS0HLu1snSuxn1SXQ&app_code=azSrplQGcMhkfV-XA50rWw");
     }
 
     @Override

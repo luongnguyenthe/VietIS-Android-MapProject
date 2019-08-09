@@ -36,4 +36,14 @@ public class MapRepository implements MapDataSource.LocalDataSource, MapDataSour
     public void findDirection(LatLng start, LatLng end, OnRequestDataListener<List<LatLng>> listener) {
         mRemoteDataSource.findDirection(start, end, listener);
     }
+
+    @Override
+    public void savePlace(Place place) {
+        mLocalDataSource.savePlace(place);
+    }
+
+    @Override
+    public List<Place> getAllPlaceSearched() {
+        return mLocalDataSource.getAllPlaceSearched();
+    }
 }

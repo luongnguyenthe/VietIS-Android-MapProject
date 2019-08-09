@@ -7,7 +7,9 @@ import java.util.List;
 
 public interface MapDataSource {
     interface LocalDataSource {
+        void savePlace(Place place);
 
+        List<Place> getAllPlaceSearched();
     }
 
     interface RemoteDataSource {
