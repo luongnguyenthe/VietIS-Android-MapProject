@@ -13,6 +13,7 @@ import com.example.sharelocation.R;
 import com.example.sharelocation.data.model.Place;
 import com.example.sharelocation.screens.OnItemRecyclerViewClickListener;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PlaceSearchRVA extends RecyclerView.Adapter<PlaceSearchRVA.ViewHolder> {
@@ -20,7 +21,7 @@ public class PlaceSearchRVA extends RecyclerView.Adapter<PlaceSearchRVA.ViewHold
     private Context mContext;
     private RecyclerView mRecyclerView;
 
-    private List<Place> mPlaces;
+    private List<Place> mPlaces = new ArrayList<>();
     private OnItemRecyclerViewClickListener<Place> mListener;
 
     public PlaceSearchRVA(Context context, OnItemRecyclerViewClickListener<Place> listener) {

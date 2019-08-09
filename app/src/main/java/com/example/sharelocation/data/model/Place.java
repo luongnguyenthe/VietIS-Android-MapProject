@@ -1,16 +1,46 @@
 package com.example.sharelocation.data.model;
 
-public class Place {
-    private String mName;
-    private String mAddress;
-    private Double mLatitude;
-    private Double mLongtitude;
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
 
-    public Place(String mName, String mAddress, Double mLatitude, Double mLongtitude) {
-        this.mName = mName;
-        this.mAddress = mAddress;
-        this.mLatitude = mLatitude;
-        this.mLongtitude = mLongtitude;
+@Entity(tableName = "places")
+public class Place {
+
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
+    private int mID;
+
+    @ColumnInfo(name = "name")
+    private String mName;
+
+    @ColumnInfo(name = "address")
+    private String mAddress;
+
+    @ColumnInfo(name = "latitude")
+    private Double mLatitude;
+
+    @ColumnInfo(name = "longitude")
+    private Double mLongitude;
+
+    public Place() {
+
+    }
+
+    public Place(int ID, String name, String address, Double latitude, Double longitude) {
+        mID = ID;
+        mName = name;
+        mAddress = address;
+        mLatitude = latitude;
+        mLongitude = longitude;
+    }
+
+    public int getID() {
+        return mID;
+    }
+
+    public void setID(int ID) {
+        mID = ID;
     }
 
     public String getName() {
@@ -37,22 +67,22 @@ public class Place {
         mLatitude = latitude;
     }
 
-    public Double getLongtitude() {
-        return mLongtitude;
+    public Double getLongitude() {
+        return mLongitude;
     }
 
-    public void setLongtitude(Double longtitude) {
-        mLongtitude = longtitude;
+    public void setLongitude(Double longitude) {
+        mLongitude = longitude;
     }
 
     @Override
     public String toString() {
         return "Place{" +
-                "mName='" + mName + '\'' +
+                "mID=" + mID +
+                ", mName='" + mName + '\'' +
                 ", mAddress='" + mAddress + '\'' +
                 ", mLatitude=" + mLatitude +
-                ", mLongtitude=" + mLongtitude +
+                ", mLongitude=" + mLongitude +
                 '}';
     }
 }
-

@@ -8,6 +8,9 @@ import java.util.List;
 
 public interface MapScreenContract {
     interface View {
+
+        void showListPlaceHistory(List<Place> places);
+
         void showIndicatorForFindingPlace();
 
         void hideIndicatorForFindingPlace();
@@ -29,5 +32,9 @@ public interface MapScreenContract {
         void findPlace(String name);
 
         void findDirection(LatLng start, LatLng end);
+
+        void savePlace(Place place);
+
+        void getAllPlaceHistory();
     }
 }

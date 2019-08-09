@@ -44,12 +44,23 @@ public class MapScreenPresenter implements MapScreenContract.Presenter {
                 }
             }
 
+
             @Override
             public void onRequestDataFailure(String message) {
                 mView.hideIndicatorForFindingPlace();
                 mView.findPlaceRequestFailed("Không tìm thấy địa điểm!");
             }
         });
+    }
+
+    @Override
+    public void savePlace(Place place) {
+        mMapRepository.savePlace(place);
+    }
+
+    @Override
+    public void getAllPlaceHistory() {
+        mView.showListPlaceHistory(mMapRepository.getAllPlaceSearched());
     }
 
     @Override
