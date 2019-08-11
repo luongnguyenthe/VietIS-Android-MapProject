@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/heigthNavheader"
+    android:orientation="vertical"
+    android:gravity="bottom"
+    android:padding="16dp"
+    android:theme="@style/ThemeOverlay.AppCompat.Dark"
+    android:background="@color/colorBackgroundNavHeader">
+
+    <ImageView
+        android:background="@drawable/bg_img_user"
+        android:src="@drawable/ic_person_black_24dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+   <LinearLayout
+       android:orientation="horizontal"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content">
+       <TextView
+           android:layout_marginTop="@dimen/marginbasic"
+           android:textSize="22sp"
+           android:textColor="@color/colorTextWhite"
+           android:text="@string/id_user"
+           android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content" />
+       <TextView
+           android:id="@+id/txt_id_user"
+           android:layout_marginTop="@dimen/marginbasic"
+           android:textSize="22sp"
+           android:textColor="@color/colorTextWhite"
+           android:text="@string/exp_user"
+           android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content" />
+   </LinearLayout>
+</LinearLayout>
