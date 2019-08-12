@@ -5,4 +5,10 @@
         <item name="android:windowDrawsSystemBarBackgrounds" tools:targetApi="lollipop">true</item>
         <item name="android:windowTranslucentStatus">true</item>
     </style>
+
+    <dimen name="marginbasic">10dp</dimen>
+    <dimen name="marginrecyclerview">12dp</dimen>
+    <dimen name="sizeimage">30dp</dimen>
+    <dimen name="heigthNavheader">176dp</dimen>
+    <dimen name="marginLeftImage">20dp</dimen>
 </resources>

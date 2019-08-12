@@ -3,4 +3,7 @@
     <string name="key_map_api">AIzaSyAPpzdA_G6j41dR6AzroqBrcAq_pxf1nv0</string>
     <string name="navigation_drawer_open">navigation_drawer_open</string>
     <string name="navigation_drawer_close">navigation_drawer_close</string>
+    <string name="id_user">ID : </string>
+    <string name="exp_user">0403</string>
+
 </resources>
